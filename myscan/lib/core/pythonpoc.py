@@ -5,11 +5,9 @@
 import pickle
 import time
 import copy
-from myscan.lib.core.data import cmd_line_options
-import os
 import json
 from myscan.lib.core.common import getredis, get_random_str
-from myscan.lib.core.data import logger
+from myscan.lib.core.data import logger, cmd_line_options
 import traceback
 import os
 
@@ -33,7 +31,7 @@ class python_poc():
         self.poc = self.workdata.get("poc")
         func_data = cmd_line_options.pocs_load_moudle[self.workdata.get('type')].get(hash(self.poc), None)
         if func_data is None:
-            logger.warning("{} poc not found,will kill this task".format(self.poc))
+            logger.debug("{} poc not found,will kill this task".format(self.poc))
             return
         func = copy.deepcopy(func_data.get("class").POC)
         class_poc = func(self.workdata)

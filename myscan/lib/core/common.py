@@ -136,14 +136,23 @@ def getmd5(s):
     return m.hexdigest()
 
 
-def is_base64(value: str):
+def is_base64(value):
+    '''
+    return : bytes or False
+    '''
     if isinstance(value, str):
         value = value.encode()
+    if len(value) % 4 != 0:
+        return False
+    regx = b'^[a-zA-Z0-9+/=%]+$'
+    if not re.match(regx, value):
+        return False
+
     try:
         res = base64.b64decode(value)
-        return res.decode().isprintable()
+        return res
     except Exception as ex:
-        print(ex)
+        # print(ex)
         return False
 
 
@@ -166,7 +175,7 @@ def escapeJsonValue(value):
     return retVal
 
 
-def verify_param(param, new, method="a", body=b"", bodyoffset=0):
+def verify_param(param, new, method="a", body=b"", bodyoffset=0, isvalue=True):
     '''
     处理新添加的值
     burp大哥这么说的:
@@ -206,24 +215,36 @@ def verify_param(param, new, method="a", body=b"", bodyoffset=0):
         new = str(new)
     if param.get("type") == 1:  # body,主动url编码
         if method == "a":
-            value = parse.quote(parse.unquote(param.get("value")) + new)
+            if isvalue:
+                value = parse.quote(parse.unquote(param.get("value")) + new)
+            else:
+                value = parse.quote(parse.unquote(param.get("name", "")) + new)
         else:
             value = parse.quote(new)
         return value
     if param.get("type") in [0, 2]:  # cookie ,url ，request会自动url编码
         if method == "a":
-            value = parse.unquote(param.get("value")) + new
+            if isvalue:
+                value = parse.unquote(param.get("value")) + new
+            else:
+                value = parse.unquote(param.get("name", "")) + new
         else:
             value = new
         return value
     if param.get("type") in [3, 4, 5]:
         if method == "a":
-            value = param.get("value") + new.replace('>', "&gt;").replace('<', "&lt;")
+            if isvalue:
+                value = param.get("value") + new.replace('>', "&gt;").replace('<', "&lt;")
+            else:
+                value = param.get("name", "") + new.replace('>', "&gt;").replace('<', "&lt;")
         else:
             value = new.replace('>', "&gt;").replace('<', "&lt;")
         return value
     if param.get("type") == 6:
-        s_value = param.get("value", "")
+        if isvalue:
+            s_value = param.get("value", "")
+        else:
+            s_value = param.get("name", "")
         st = param.get("valuestart") - bodyoffset
         symbol = body[st - 1:st]
         if symbol == b'"':

@@ -20,7 +20,7 @@ class POC():
         self.result = []  # 此result保存dict数据，dict需包含name,url,level,detail字段，detail字段值必须为dict。如下self.result.append代码
         self.name = "Struts2-029"
         self.vulmsg = "Struts2-029远程代码执行"
-        self.level = 2  # 0:Low  1:Medium 2:High
+        self.level = 3  # 0:Low  1:Medium 2:High
 
     def verify(self):
         # 添加限定条件
@@ -38,7 +38,7 @@ class POC():
                 req = self.parser.getreqfromparam(param, "w", payload)
                 r = request(**req)
                 if r != None:
-                    if re.search("[^(echo)][^ (%20)]{}|^\s*{}\s*$".format(random_str,random_str).encode(),r.content):
+                    if re.search("[^(echo)][^ (%20)]{}|^\s*{}\s*$".format(random_str,random_str).encode(),r.content) and b"echo" not in r.content:
                         parser_ = response_parser(r)
                         self.result.append({
                             "name": self.name,
